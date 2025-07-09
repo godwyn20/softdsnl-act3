@@ -18,10 +18,11 @@ label_encoder = joblib.load(encoder_path)
 class PredictView(APIView):
     def post(self, request):
         try:
-            petal_length = float(request.data.get("petal_length"))
-            petal_width = float(request.data.get("petal_width"))
+            height = float(request.data.get("height"))
+            length = float(request.data.get("length"))
+            width = float(request.data.get("width"))
 
-            prediction = model.predict([[petal_length, petal_width]])
+            prediction = model.predict([[height, width, length]])
             label = label_encoder.inverse_transform(prediction)[0]
 
             return Response({"prediction": label})
