@@ -54,10 +54,17 @@ cd ml-custom-dataset
 Example (at least 2 numeric features and 1 label):
 
 ```
-petal_length,petal_width,species
-1.4,0.2,setosa
-4.7,1.4,versicolor
-5.5,2.1,virginica
+height,width,length,type
+21.5,6.8,6.8,plastic
+18.3,7.2,7.1,glass
+24.0,6.0,6.2,metal
+19.8,6.5,6.4,plastic
+22.1,6.3,6.5,glass
+17.5,5.8,5.9,metal
+25.3,7.0,6.9,plastic
+20.0,6.6,6.7,glass
+23.7,6.9,6.8,metal
+21.0,6.1,6.2,plastic
 ```
 
 Save as `my_dataset.csv`.
@@ -95,19 +102,24 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import joblib
 
+# Load the dataset
 df = pd.read_csv("my_dataset.csv")
 
-sns.scatterplot(data=df, x="petal_length", y="petal_width", hue="species")
-plt.title("Custom Dataset")
+# Plot the data
+sns.pairplot(df, hue="type", diag_kind="kde")
+plt.suptitle("Bottle Dimensions by Type", y=1.02)
 plt.show()
 
-X = df[["petal_length", "petal_width"]]
+# Features and target
+X = df[["height", "width", "length"]]
 le = LabelEncoder()
-y = le.fit_transform(df["species"])
+y = le.fit_transform(df["type"])
 
+# Train the model
 model = RandomForestClassifier()
 model.fit(X, y)
 
+# Save the model and label encoder
 joblib.dump(model, "model.pkl")
 joblib.dump(le, "label_encoder.pkl")
 print("✅ Model trained and saved.")
@@ -213,22 +225,25 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import joblib
+
 import os
 from django.conf import settings
 
-model_path = os.path.join(settings.BASE_DIR, "ml_api", "model.pkl")
-encoder_path = os.path.join(settings.BASE_DIR, "ml_api", "label_encoder.pkl")
+model_path = os.path.join(settings.BASE_DIR, 'ml_api', 'model.pkl')
+encoder_path = os.path.join(settings.BASE_DIR, 'ml_api', 'label_encoder.pkl')
 
-model = joblib.load("model.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+model = joblib.load(model_path)
+label_encoder = joblib.load(encoder_path)
+
 
 class PredictView(APIView):
     def post(self, request):
         try:
-            petal_length = float(request.data.get("petal_length"))
-            petal_width = float(request.data.get("petal_width"))
+            height = float(request.data.get("height"))
+            length = float(request.data.get("length"))
+            width = float(request.data.get("width"))
 
-            prediction = model.predict([[petal_length, petal_width]])
+            prediction = model.predict([[height, width, length]])
             label = label_encoder.inverse_transform(prediction)[0]
 
             return Response({"prediction": label})
@@ -250,8 +265,9 @@ Test via Postman:
 
 ```json
 {
-  "petal_length": 5.5,
-  "petal_width": 2.1
+  "height": 21.5,
+  "width": 6.8,
+  "length": 6.8
 }
 ```
 
