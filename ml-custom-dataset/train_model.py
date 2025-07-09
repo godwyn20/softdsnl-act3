@@ -7,19 +7,26 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 import joblib
 
+# Load the dataset
 df = pd.read_csv("my_dataset.csv")
 
-sns.scatterplot(data=df, x="petal_length", y="petal_width", hue="species")
-plt.title("Custom Dataset")
+# Plot the data
+sns.pairplot(df, hue="type", diag_kind="kde")
+plt.suptitle("Bottle Dimensions by Type", y=1.02)
 plt.show()
 
-X = df[["petal_length", "petal_width"]]
+# Features and target
+X = df[["height", "width", "length"]]
 le = LabelEncoder()
-y = le.fit_transform(df["species"])
+y = le.fit_transform(df["type"])
 
+# Train the model
 model = RandomForestClassifier()
 model.fit(X, y)
 
+# Save the model and label encoder
 joblib.dump(model, "model.pkl")
 joblib.dump(le, "label_encoder.pkl")
 print("✅ Model trained and saved.")
+
+
